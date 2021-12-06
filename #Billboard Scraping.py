@@ -11,40 +11,12 @@ import json
 
 
 #use Beautiful soup and html parser to get info from website and store in database. and run calculations on Billboard data
-def create_request_url(chart):
-    base_url = f"http://billboard.com/charts/year-end/2020/{chart}"
-    return base_url
-    #page = requests.get(url)
-#print(page.text)
 
-def gather_data_BS(chart):
-    #gathers data from Beautiful Soup from the base_url and stores in a database
-    url = create_request_url(chart)
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    if chart == "hot-100-songs/":
-        ls_of_titles = []
-        first = soup.find('h3', class_="c-title a-font-primary-bold-s u-letter-spacing-0021 u-font-size-23@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max u-letter-spacing-0028@tablet")
-        first_title = first.text
-        ls_of_titles.append(first_title.strip())
-        all_h3s = soup.find_all('h3', class_= "c-title a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max")
-        #, class_="['c-title',  'a-font-primary-bold-s', 'u-letter-spacing-0021', 'lrv-u-font-size-18@tablet', 'lrv-u-font-size-16 u-line-height-125', 'u-line-height-normal@mobile-max']")
-    #class_="c-title  a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max" breaking it. but its the right class.
-        for i in all_h3s:
-            title =i.text
-            ls_of_titles.append(title.strip())
-        print(ls_of_titles)
-    elif chart == "top-billboard-200-albums/":
-        ls_of_albums = []
-        first = soup.find('h3', class_="c-title a-font-primary-bold-s u-letter-spacing-0021 u-font-size-23@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max u-letter-spacing-0028@tablet")
-        first_title = first.text
-        ls_of_albums.append(first_title.strip())
-        albums = soup.find_all('h3', class_="c-title a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max")
-        for i in albums:
-            title = i.text
-            ls_of_albums.append(title.strip())
-        print(ls_of_albums)
-        #create a dictionary of each album and the other albums it has in it
+def createDatabase(name):
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+name)
+    cur = conn.cursor()
+    return cur, conn
 
 
 def gather_data_pitch():
@@ -68,28 +40,97 @@ def gather_data_pitch():
         res = re.sub(r'[^\w\s]', '', t[1])
         songname.append(res)
     together = zip(artist, songname)
+    togetherr = list(together)
+    print(togetherr)
+    return togetherr
+
+
+def gather_data_BS():
+    #gathers data from Beautiful Soup from the base_url and stores in a database
+    url = "http://billboard.com/charts/year-end/2020/hot-100-songs/"
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    
+    ls_of_titles = []
+    ls_of_artists = []
+    first_song = soup.find('h3', class_="c-title a-font-primary-bold-s u-letter-spacing-0021 u-font-size-23@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max u-letter-spacing-0028@tablet")
+    first_song = first_song.text.strip()
+    ls_of_titles.append(first_song)
+    first_artist = soup.find('span', class_="c-label a-font-primary-s lrv-u-font-size-14@mobile-max u-line-height-normal@mobile-max u-letter-spacing-0021 lrv-u-display-block u-font-size-20@tablet")
+    first_artist = first_artist.text.strip()
+    ls_of_artists.append(first_artist)
+    # first_input = first_song, first_artist
+    # ls_of_titles.append(first_input)
+
+        #find all titles
+    all_titles = soup.find_all('h3', class_= "c-title a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max")
+    all_artists = soup.find_all('span', class_="c-label a-font-primary-s lrv-u-font-size-14@mobile-max u-line-height-normal@mobile-max u-letter-spacing-0021 lrv-u-display-block")
+    for i in all_titles:
+        title = i.text
+        title = title.strip()
+        ls_of_titles.append(title)
+    for i in all_artists:
+        artist = i.text.strip()
+        ls_of_artists.append(artist)
+    together = zip(ls_of_titles, ls_of_artists)
     together = list(together)
     print(together)
     return together
 
 
-def get_top_artist_per_genre(popularity):
-    #get the top artist given a list of popular genres from spotipy. 
-    # return a dictionary w genre as key and the top 10 artists in that category as values
-    pass 
+def set_up_Billboard(cur, conn):
+    "Input: Database cursor and connection. No output. Creates Table that will hold Top 100 hummed songs"
+    cur.execute("DROP TABLE IF EXISTS Billboard")
+    cur.execute("CREATE TABLE IF NOT EXISTS Billboard (song_id INTEGER PRIMARY KEY, song_rank INTEGER, title TEXT, artist TEXT)")
+    conn.commit()
+def set_up_Pitchfork(cur, conn):
+    "Input: Database cursor and connection. No output. Creates Table that will hold Top 100 hummed songs"
+    cur.execute("DROP TABLE IF EXISTS Pitchfork")
+    cur.execute("CREATE TABLE IF NOT EXISTS Pitchfork (song_id INTEGER PRIMARY KEY, song_rank INTEGER, title TEXT, artist TEXT)")
+    conn.commit()
 
-def pct_top_artists():
-    #get the pct of artists in the top genre that also have a song in the top genre
-    pass
+def fill_data_in_Billboard(cur,conn):
+    "Input: Database cursor and connection. No output. Fills in the Billboard table with songs, artists, and ID. ID is song's unique identification number for reference."
+    #Calls get_data()
+    data_list = gather_data_BS()
+    rank = 1
+    for i in data_list:
+        song = i[0]
+        artist = i[1]
+        song_rank = rank
+        rank = rank + 1 
+        cur.execute("INSERT INTO Billboard (song_rank, title, artist) VALUES (?,?,?)", (song_rank, song, artist))
+    conn.commit()
+def fill_data_in_Pitchfork(cur,conn):
+    "Input: Database cursor and connection. No output. Fills in the Pitchfork table with songs, artists, and ID. ID is song's unique identification number for reference."
+    #Calls get_data()
+    data_list = gather_data_pitch()
+    rank = 1
+    for i in data_list:
+        song = i[1]
+        artist = i[0]
+        song_rank = rank
+        rank = rank + 1 
+        cur.execute("INSERT INTO Pitchfork (song_rank, title, artist) VALUES (?,?,?)", (song_rank, song, artist))
+    conn.commit()
+
 def main():
 
     # path = os.path.dirname(os.path.abspath(__file__))
     # conn = sqlite3.connect(path+'/music.db')
     # cur = conn.cursor()
-    #print(get_top_genres())
-    #gather_data_BS('hot-100-songs/')
-    #gather_data_BS('top-billboard-200-albums/')
+
+    cur, conn = createDatabase('TopCharts.db')
+    gather_data_BS()
+    set_up_Billboard(cur, conn)
+    fill_data_in_Billboard(cur, conn)
+    
     gather_data_pitch()
+    set_up_Pitchfork(cur, conn)
+    fill_data_in_Pitchfork(cur, conn)
+
+    # gather_data_BS('top-billboard-200-albums/')
+    # gather_data_BS('top-artists/')
     # (cur, conn)
 
 
