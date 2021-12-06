@@ -17,23 +17,56 @@ client_credentials_manager = SpotifyClientCredentials(client_id=cid, client_secr
 sp = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
 
 
+# def get_top_genres():
+#     artist =[]
+#     results = sp.search(q="artist:", limit = 50)
+#     for result in results['tracks']['items']:
+#         artist.append(results['name'])
+#     return  artist 
+
+def thesongpopularity(songname):
+
+    res = sp.search(q='track:' + str(songname[0]))
+    thepop = res['tracks']['items'][0]['popularity']
+    return thepop
 
 
-def get_top_genres():
-    popularity = []
-    for i in range(0,10000,50):
-        track_results = sp.search(q='year:2018', type='track', limit=50,offset=i)
-        for i, t in enumerate(track_results['tracks']['items']):
-            popularity.append(t['popularity'])
-    return popularity
-    #limit to 50 artists
+def getbillboard(cur, conn):
+    cur.execute('SELECT song, artist FROM Billboard')
+    bill_songs = cur.fetchall()
+    conn.commit()
+    return bill_songs
 
-def get_artist_genre():
     #limit to top ten artists
-    pass
-def get_top_songs():
+    #api function
+
+def clean_titles(listof):
+    
+    
+    #finallist = list(zip(finalsongs, finalnames)
+    #return finallist
+   
+    #api function
     #50 songs artist dictionary 
     pass
+
+
+def reformat_fnl_tup():
+     
+    pass 
+
+def create_table(cur, conn, list):
+    #calculate the proportion of songs an artist has in the top 100 
+    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
+    pop_list = reformat_fnl_tup(list)
+    
+    pass
+
+def get_top_albums_pitch():
+    #options 
+    pass 
+
+
 
 def main():
 
@@ -42,8 +75,6 @@ def main():
     # cur = conn.cursor()
     print(get_top_genres())
     # (cur, conn)
-
-
 
     # conn.close()
 
