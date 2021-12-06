@@ -46,19 +46,31 @@ def gather_data_BS(chart):
         print(ls_of_albums)
         #create a dictionary of each album and the other albums it has in it
 
-    #put it in a database
-    # cur.execute("CREATE TABLE Top Songs (id INTEGER PRIMARY KEY, song TEXT)")
-    # for i in range(len(ls_of_titles)):
-    #     cur.execute("INSERT INTO Top Songs (id,song) VALUES (?,?)",(i, ls_of_titles[i]))
 
-    
-        #     titles = soup.find(class_="c-title  a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max")
-        #class_="['c-title',  'a-font-primary-bold-s', 'u-letter-spacing-0021', 'lrv-u-font-size-18@tablet', 'lrv-u-font-size-16 u-line-height-125', 'u-line-height-normal@mobile-max']"
-        # for j in titles:
-    #elif chart == "top-songs":   
-        # titles = soup.find(id="title-of-a-story")
-        # titles.find_all('h3', class_=)
-        # soup.find_all('h3')
+def gather_data_pitch():
+    titles_list = []
+    artist =[]
+    songname =[]
+    thenewnew =[]
+    base_url2 = f"https://pitchfork.com/features/lists-and-guides/best-songs-2020/" 
+    page = requests.get(base_url2)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    x = soup.find_all('div', class_ = "body__inner-container")
+    for i in x:
+        songdata = i.find_all('h2')
+        for v in songdata:
+            ssongdata = v.text
+            titles_list.append(ssongdata.strip())
+    for r in titles_list:
+        thenewnew.append(r.split(':'))
+    for t in thenewnew:
+        artist.append(t[0])
+        res = re.sub(r'[^\w\s]', '', t[1])
+        songname.append(res)
+    together = zip(artist, songname)
+    together = list(together)
+    print(together)
+    return together
 
 
 def get_top_artist_per_genre(popularity):
@@ -74,9 +86,10 @@ def main():
     # path = os.path.dirname(os.path.abspath(__file__))
     # conn = sqlite3.connect(path+'/music.db')
     # cur = conn.cursor()
-    print(get_top_genres())
-    gather_data_BS('hot-100-songs/')
-    gather_data_BS('top-billboard-200-albums/')
+    #print(get_top_genres())
+    #gather_data_BS('hot-100-songs/')
+    #gather_data_BS('top-billboard-200-albums/')
+    gather_data_pitch()
     # (cur, conn)
 
 
