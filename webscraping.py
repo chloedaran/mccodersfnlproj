@@ -10,6 +10,7 @@ import json
 
 
 
+
 #use Beautiful soup and html parser to get info from website and store in database. and run calculations on Billboard data
 
 def createDatabase(name):
@@ -61,7 +62,6 @@ def gather_data_BS():
     ls_of_artists.append(first_artist)
     # first_input = first_song, first_artist
     # ls_of_titles.append(first_input)
-
         #find all titles
     all_titles = soup.find_all('h3', class_= "c-title a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max")
     all_artists = soup.find_all('span', class_="c-label a-font-primary-s lrv-u-font-size-14@mobile-max u-line-height-normal@mobile-max u-letter-spacing-0021 lrv-u-display-block")
@@ -114,8 +114,9 @@ def fill_data_in_Pitchfork(cur,conn):
         cur.execute("INSERT INTO Pitchfork (song_rank, title, artist) VALUES (?,?,?)", (song_rank, song, artist))
     conn.commit()
 
-def main():
 
+
+def main():
     # path = os.path.dirname(os.path.abspath(__file__))
     # conn = sqlite3.connect(path+'/music.db')
     # cur = conn.cursor()
