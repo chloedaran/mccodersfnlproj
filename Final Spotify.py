@@ -83,33 +83,50 @@ def thesongpopularity(songnamelist):
         newnew.append(thepop)
     return (newnew)
 
-def thesonggenre(songnamelist):
+def thesongdate(songnamelist):
     newnew =[]
     for i in songnamelist: 
         res = sp.search(q='track:' + str(i[0]))
-        thepop = res['tracks']['items'][0]['popularity']
-
+        thepop = res['tracks']['items'][0]['album']['release_date']
         newnew.append(thepop)
     return newnew
 
-def pop_list(lst):
-    pop_lst = []
-    for x in lst:
-        string = x[0] + ' (by ' + x[1] + ')'
-        pop_lst.append((string,thesongpopularity(x)))
-    return pop_lst
+# def pop_list(lst):
+#     pop_lst = []
+#     for x in lst:
+#         string = x[0] + ' (by ' + x[1] + ')'
+#         pop_lst.append((string,thesongpopularity(x)))
+#     return pop_lst
 
     #limit to top ten artists
     #api function
 
 
 
-def create_table(cur, conn, list):
-    #calculate the proportion of songs an artist has in the top 100 
+def pop_table(cur, conn, lst):
+    """
+    Input: Database cursor, connection, and list of tuples in the format (titles, artist). 
+    Output: No output. 
+    Purpose: Fills in the Spotify_Popularity_Scores table with ID, track, and popularity score. 
+    ID is song's unique identification number for reference.
+    """
+    #Sets up Spotify_Popularity_Scores table
     cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
-    #pop_list = reformat_fnl_tup(list)
-
-    pass
+    #Calls pop_lst()
+    popularity_lst = pop_list(lst)
+    #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
+    cur.execute('SELECT track FROM Spotify_Popularity_Scores')
+    track_list = cur.fetchall()
+    index = len(track_list)
+    #Adds songs in Billboard table (25 entries each time)
+    for i in range(20):
+        #song_ID identifies unique songs
+        song_ID = index + 1
+        track = popularity_lst[index][0]
+        popularity = popularity_lst[index][1]
+        cur.execute("INSERT INTO Spotify_Popularity_Scores (song_ID, track, popularity) VALUES (?, ?, ?)", (song_ID, track, popularity))
+        index += 1
+    conn.commit()
 
 def get_top_albums_pitch():
     #options 
@@ -126,7 +143,9 @@ def main():
     #     test.append(thesonggenre(x))
     # print(x)
     #print(tuples_lst)
-    x= thesongpopularity(tuples_lst)
+    y = thesongpopularity(tuples_lst)
+    print(y) 
+    x = thesongdate(tuples_lst)
     print(x)
     #print(pop_list(tuples_lst))
     # print(refined_tuple_lst)
