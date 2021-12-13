@@ -93,6 +93,7 @@ def plot_deviations(cur, conn, diff_ls):
     plt.title("Songs' Popularity Deviations from the Mean Popularity")
     plt.tight_layout()
     plt.show()
+    
 def plot_deviations2(cur, conn, diff_ls):
     cur.execute('SELECT track, popularity FROM Spotify_Popularity_Scores2')
     songpop_list = cur.fetchall()
@@ -110,7 +111,6 @@ def plot_deviations2(cur, conn, diff_ls):
     plt.tight_layout()
     plt.show()
 
-
 def season_cat(cur, conn):
     season_var =[]
     cur.execute('SELECT track, date FROM Spotify_Dates')
@@ -125,18 +125,19 @@ def season_cat(cur, conn):
         elif item[6:8] == '03' or '04':
             season_var.append('spring')
     return season_var
+
 def season_cat2(cur, conn):
     season_var =[]
     cur.execute('SELECT track, date FROM Spotify_Dates2')
     date_list = cur.fetchall()
-    for item in date_list:
-        if item[6:8] == '05' or '06' or '07' or '08':
+    for x in date_list:
+        if x[1][6:8] == '05' or '06' or '07' or '08':
             season_var.append('summer')
-        elif item[6:8] == '09' or '10':
+        elif x[1][6:8] == '09' or '10':
             season_var.append('fall') 
-        elif item[6:8] == '11' or '12' or '01' or '02':
+        elif x[1][6:8] == '11' or '12' or '01' or '02':
             season_var.append('winter')
-        elif item[6:8] == '03' or '04':
+        elif x[1][6:8] == '03' or '04':
             season_var.append('spring')
     return season_var
 
@@ -158,13 +159,22 @@ def season_data2(cur, conn, list):
         cur.execute('INSERT INTO Spotify_Dates2(season) VALUES (?)', (season))
         index += 1
     conn.commit()
-def season_pie_graph(cur, conn, seasonlist):
-    pass
+def percent_season(cur, conn):
+    listofpercents= []
+
+    return listofpercents
+
+def season_pie_graph(seasonlist):
+    sizes = []
+    labels = 'Fall', 'Winter', 'Spring', 'Summer'
+    colors = []
+    plt.pie(sizes, labels = labels, colors = colors, autopct='%1.1%', startangle = 140)
+    plt.axis('equal')
+    plt.show()
 
 
 
 def writeText(filename, cur, conn):
-
     path = os.path.dirname(os.path.abspath(__file__)) + os.sep
 
     outFile = open(path + filename, "w")
@@ -185,9 +195,13 @@ def main():
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/TopCharts.db')
     cur = conn.cursor()
-    mean = avg_popranking(cur, conn, 'Spotify_Popularity_Scores')
+    mean = avg_popranking(cur, conn)
     diff_ls = deviations(cur, conn, mean)
     plot_deviations(cur, conn, diff_ls)
+
+    mean2 = avg_popranking2(cur, conn)
+    diff_ls2 = deviations2(cur, conn, mean2)
+    plot_deviations2(cur, conn, diff_ls2)
     
     conn.close()
 
