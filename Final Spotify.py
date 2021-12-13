@@ -58,6 +58,10 @@ def strip_titles(lst):
         elif "('" in x[0]:
             title = x[0].strip("(")
             final_titles.append(title.strip())
+        if 'ft' in x[0]:
+            title = x[0].split('ft')
+            final_titles.append(title.strip())
+            #final_titles.append(x[0].strip())
         else:
             final_titles.append(x[0])
     return final_titles
@@ -99,14 +103,14 @@ def flistdates(songlist, apidatalist):
     songz = []
     for item in songlist:
         songz.append(item[0])
-    y = list(zip(songz, apidatalist ))
+    y = list(zip(songz, apidatalist))
     return y
 
 
 
 
 def pop_table(cur, conn, lst):
-    #cur.execute("DROP TABLE IF EXISTS Spotify_Popularity_Scores")
+    cur.execute("DROP TABLE IF EXISTS Spotify_Popularity_Scores")
     cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
 
     #Calls pop_lst()
@@ -125,8 +129,28 @@ def pop_table(cur, conn, lst):
         index += 1
     conn.commit()
 
+def pop_table2(cur, conn, lst):
+    cur.execute("DROP TABLE IF EXISTS Spotify_Popularity_Scores2")
+    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores2 (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
+
+    #Calls pop_lst()
+    popularity_lst = theflist(lst , thesongpopularity(lst))
+    #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
+    cur.execute('SELECT track FROM Spotify_Popularity_Scores2')
+    track_list = cur.fetchall()
+    index = len(track_list)
+    #Adds songs in Billboard table (25 entries each time)
+    for i in range(25):
+        #song_ID identifies unique songs
+        song_ID = index + 1
+        track = popularity_lst[index][0]
+        popularity = popularity_lst[index][1]
+        cur.execute("INSERT INTO Spotify_Popularity_Scores2 (song_ID, track, popularity) VALUES (?, ?, ?)", (song_ID, track, popularity))
+        index += 1
+    conn.commit()
+
 def date_table(cur, conn, lst):
-    #cur.execute("DROP TABLE IF EXISTS Spotify_Dates")
+    cur.execute("DROP TABLE IF EXISTS Spotify_Dates")
     cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Dates (song_ID INTEGER PRIMARY KEY, track TEXT, date TEXT)")
 
     #Calls pop_lst()
@@ -145,6 +169,26 @@ def date_table(cur, conn, lst):
         index += 1
     conn.commit()
 
+def date_table2(cur, conn, lst):
+    cur.execute("DROP TABLE IF EXISTS Spotify_Dates2")
+    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Dates2 (song_ID INTEGER PRIMARY KEY, track TEXT, date TEXT)")
+
+    #Calls pop_lst()
+    date_list = theflist(lst, thesongdate(lst))
+    #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
+    cur.execute('SELECT track FROM Spotify_Dates2')
+    track_list = cur.fetchall()
+    index = len(track_list)
+    #Adds songs in Billboard table (25 entries each time)
+    for i in range(25):
+        #song_ID identifies unique songs
+        song_ID = index + 1
+        track = date_list[index][0]
+        date = date_list[index][1]
+        cur.execute("INSERT INTO Spotify_Dates2(song_ID, track, date) VALUES (?, ?, ?)", (song_ID, track, date))
+        index += 1
+    conn.commit()
+
 
 
 def main():
@@ -152,13 +196,16 @@ def main():
     conn = sqlite3.connect(path+'/TopCharts.db')
     cur = conn.cursor()
     tuples_lst = format(cur, conn)
-    #print(tuples_lst)
-    #x = strip_titles(tuples_lst)
+    tuples_lst2 = formatpit(cur, conn)
+    u = strip_titles(tuples_lst2)
+    #c = final_tuples(tuples_lst2, u)
+    print(u)
 
-    #y = final_tuples(tuples_lst, x)
+    # pop_table(cur, conn, tuples_lst)
+    # date_table(cur, conn, tuples_lst)
 
-    pop_table(cur, conn, tuples_lst)
-    date_table(cur, conn, tuples_lst)
+    # pop_table2(cur, conn, tuples_lst2)
+    # date_table2(cur, conn, tuples_lst2)
 
     conn.close()
 
