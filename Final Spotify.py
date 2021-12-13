@@ -1,4 +1,5 @@
 #Final Project 
+from typing import final
 import requests
 import re
 import os
@@ -29,44 +30,45 @@ def formatpit(cur, conn):
     conn.commit()
     return tlist
 
-def strip_artists(lst):
-    final_names = []
-    for x in lst:
-        if '/' in x[1]:
-            name = x[1].split('With')
-            final_names.append(name[0].strip())
-        elif '&' in x[1]:
-            name = x[1].split('&')
-            final_names.append(name[0].strip())
-        elif 'Featuring' in x[1]:
-            name = x[1].split('Featuring')
-            final_names.append(name[0].strip())
-        elif 'DJ' in x[1]:
-            name = x[1].split('DJ')
-            final_names.append(name[1].strip())
-        else:
-            final_names.append(x[1])
-    return final_names
+# def strip_artists(lst):
+#     final_names = []
+#     for x in lst:
+#         if '/' in x[1]:
+#             name = x[1].split('With')
+#             final_names.append(name[0].strip())
+#         elif '&' in x[1]:
+#             name = x[1].split('&')
+#             final_names.append(name[0].strip())
+#         elif 'Featuring' in x[1]:
+#             name = x[1].split('Featuring')
+#             final_names.append(name[0].strip())
+#         elif 'DJ' in x[1]:
+#             name = x[1].split('DJ')
+#             final_names.append(name[1].strip())
+#         else:
+#             final_names.append(x[1])
+#     return final_names
 
 def strip_titles(lst):
     final_titles = []
     for x in lst:
-        if '(' in x[0]:
-            title = x[0].split('(')
-            final_titles.append(title[0].strip())
-        elif "ft'" in x[0]:
-            title = x[0].strip("\'")
+        if '$' in x[0]:
+            title = x[0].replace('$','s')
+            final_titles.append(title)
+        elif "('" in x[0]:
+            title = x[0].strip("(")
             final_titles.append(title.strip())
         else:
             final_titles.append(x[0])
-        return final_titles
+    return final_titles
 
-def ultimate_tuple(lst):
-    titles = strip_titles(lst)
-    artists = strip_artists(lst)
-    tuples = list(zip(titles, artists))
-    return tuples
+def final_tuples(listt, list2):
+    new = []
+    for x in listt:
+        new.append(x[1])
 
+    y = list(zip(list2,new))
+    return y
 
 
 def thesongpopularity(songnamelist):
@@ -108,7 +110,7 @@ def pop_table(cur, conn, lst):
     cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
 
     #Calls pop_lst()
-    popularity_lst = theflist(lst, thesongpopularity(lst))
+    popularity_lst = theflist(final_tuples(lst,strip_titles(lst)) , thesongpopularity(lst))
     #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
     cur.execute('SELECT track FROM Spotify_Popularity_Scores')
     track_list = cur.fetchall()
@@ -128,7 +130,7 @@ def date_table(cur, conn, lst):
     cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Dates (song_ID INTEGER PRIMARY KEY, track TEXT, date TEXT)")
 
     #Calls pop_lst()
-    date_list = theflist(lst, thesongdate(lst))
+    date_list = theflist(final_tuples(lst,strip_titles(lst)), thesongdate(lst))
     #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
     cur.execute('SELECT track FROM Spotify_Dates')
     track_list = cur.fetchall()
@@ -150,6 +152,11 @@ def main():
     conn = sqlite3.connect(path+'/TopCharts.db')
     cur = conn.cursor()
     tuples_lst = format(cur, conn)
+    #print(tuples_lst)
+    #x = strip_titles(tuples_lst)
+
+    #y = final_tuples(tuples_lst, x)
+
     pop_table(cur, conn, tuples_lst)
     date_table(cur, conn, tuples_lst)
 

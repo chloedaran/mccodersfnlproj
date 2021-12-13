@@ -8,7 +8,7 @@ import json
 import matplotlib
 import matplotlib.pyplot as plt
 
-def avg_popranking(cur, conn):
+def avg_popranking(cur, conn, table):
     cur.execute('SELECT track, popularity FROM Spotify_Popularity_Scores')
     songpop_list = cur.fetchall()
     #get values of dict_song into a list.
@@ -51,17 +51,34 @@ def plot_deviations(cur, conn, diff_ls):
         x.append(i[0]) #song titles are along the x-axis
     for i in diff_ls:
         y.append(i) #diff of avg popularity and mean is y-axis
-    plt.line(x, y)
+    plt.plot(x, y, 'ro')
     plt.xlabel("Songs")
+    plt.xticks(x, rotation = 'vertical')
     plt.ylabel("Deviation from Mean Popularity")
     plt.title("Songs' Popularity Deviations from the Mean Popularity")
+    plt.tight_layout()
     plt.show()
+
+
+def writeText(filename, cur, conn):
+
+    # path = os.path.dirname(os.path.abspath(__file__)) + os.sep
+
+    # outFile = open(path + filename, "w")
+    # outFile.write("Comparing the Average Popularity of a BillBoard Hot 100 Songs and Pitchfork on Spotify\n")
+    # outFile.write("=============================================================\n\n")
+    # pop_output = (average_popularity(cur, conn))
+    # #This line rounds the average popularity to one decimal place.
+    # rounded_pop = int(pop_output*100) / 100
+    # outFile.write("The average popularity of a Billboard Hot 100 song on Spotify is " + str(rounded_pop) + "." + "\n\n")
+    # outFile.close()
+    pass
 
 def main():
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/TopCharts.db')
     cur = conn.cursor()
-    mean = avg_popranking(cur, conn)
+    mean = avg_popranking(cur, conn, 'Spotify_Popularity_Scores')
     diff_ls = deviations(cur, conn, mean)
     plot_deviations(cur, conn, diff_ls)
     
