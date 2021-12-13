@@ -80,12 +80,12 @@ def gather_data_BS():
 
 def set_up_Billboard(cur, conn):
     "Input: Database cursor and connection. No output. Creates Table that will hold Top 100 hummed songs"
-    cur.execute("DROP TABLE IF EXISTS Billboard")
+    #cur.execute("DROP TABLE IF EXISTS Billboard")
     cur.execute("CREATE TABLE IF NOT EXISTS Billboard (song_id INTEGER PRIMARY KEY, song_rank INTEGER, title TEXT, artist TEXT)")
     conn.commit()
 def set_up_Pitchfork(cur, conn):
     "Input: Database cursor and connection. No output. Creates Table that will hold Top 100 hummed songs"
-    cur.execute("DROP TABLE IF EXISTS Pitchfork")
+    #cur.execute("DROP TABLE IF EXISTS Pitchfork")
     cur.execute("CREATE TABLE IF NOT EXISTS Pitchfork (song_id INTEGER PRIMARY KEY, song_rank INTEGER, title TEXT, artist TEXT)")
     conn.commit()
 
@@ -93,26 +93,33 @@ def fill_data_in_Billboard(cur,conn):
     "Input: Database cursor and connection. No output. Fills in the Billboard table with songs, artists, and ID. ID is song's unique identification number for reference."
     #Calls get_data()
     data_list = gather_data_BS()
-    rank = 1
-    for i in data_list:
-        song = i[0]
-        artist = i[1]
-        song_rank = rank
-        rank = rank + 1 
-        cur.execute("INSERT INTO Billboard (song_rank, title, artist) VALUES (?,?,?)", (song_rank, song, artist))
+    
+    cur.execute('SELECT title FROM Billboard')
+    songs_list = cur.fetchall()
+    index = len(songs_list)
+    for i in range(25):
+        song = data_list[index][0]
+        artist = data_list[index][1]
+        song_id = index + 1
+        cur.execute("INSERT OR IGNORE INTO Billboard (song_rank, title, artist) VALUES (?,?,?)", (song_id, song, artist))
+        index +=1
     conn.commit()
+
 def fill_data_in_Pitchfork(cur,conn):
     "Input: Database cursor and connection. No output. Fills in the Pitchfork table with songs, artists, and ID. ID is song's unique identification number for reference."
     #Calls get_data()
     data_list = gather_data_pitch()
-    rank = 1
-    for i in data_list:
-        song = i[1]
-        artist = i[0]
-        song_rank = rank
-        rank = rank + 1 
-        cur.execute("INSERT INTO Pitchfork (song_rank, title, artist) VALUES (?,?,?)", (song_rank, song, artist))
+    cur.execute('SELECT title FROM Pitchfork')
+    songs_list = cur.fetchall()
+    index = len(songs_list)
+    for i in range(25):
+        song = data_list[index][1]
+        artist = data_list[index][0]
+        song_id = index + 1
+        cur.execute("INSERT OR IGNORE INTO Pitchfork (song_rank, title, artist) VALUES (?,?,?)", (song_id, song, artist))
+        index +=1
     conn.commit()
+
 
 
 

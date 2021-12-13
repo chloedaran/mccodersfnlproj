@@ -3,11 +3,11 @@ import requests
 import re
 import os
 import sqlite3
+from requests import api
 import spotipy
 import spotipy.oauth2 as oauth2
 from spotipy.oauth2 import SpotifyOAuth
 from spotipy.oauth2 import SpotifyClientCredentials
-
 
 
 cid = '5e6f0741afdd4e2892e4aa3dacd22f8a'
@@ -68,12 +68,6 @@ def ultimate_tuple(lst):
     return tuples
 
 
-def fformat(cur, conn):
-    cur.execute('SELECT title, artist FROM Pitchfork')
-    thelist = cur.fetchall()
-    conn.commit()
-    return thelist
-
 
 def thesongpopularity(songnamelist):
     newnew =[]
@@ -91,35 +85,36 @@ def thesongdate(songnamelist):
         newnew.append(thepop)
     return newnew
 
-# def pop_list(lst):
-#     pop_lst = []
-#     for x in lst:
-#         string = x[0] + ' (by ' + x[1] + ')'
-#         pop_lst.append((string,thesongpopularity(x)))
-#     return pop_lst
+def theflist(songlist, apidatalist):
+    songgg = []
+    for item in songlist:
+        songgg.append(item[0])
+    x = list(zip(songgg, apidatalist))
+    return x
 
-    #limit to top ten artists
-    #api function
+
+def flistdates(songlist, apidatalist):
+    songz = []
+    for item in songlist:
+        songz.append(item[0])
+    y = list(zip(songz, apidatalist ))
+    return y
+
 
 
 
 def pop_table(cur, conn, lst):
-    """
-    Input: Database cursor, connection, and list of tuples in the format (titles, artist). 
-    Output: No output. 
-    Purpose: Fills in the Spotify_Popularity_Scores table with ID, track, and popularity score. 
-    ID is song's unique identification number for reference.
-    """
-    #Sets up Spotify_Popularity_Scores table
+    #cur.execute("DROP TABLE IF EXISTS Spotify_Popularity_Scores")
     cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
+
     #Calls pop_lst()
-    popularity_lst = pop_list(lst)
+    popularity_lst = theflist(lst, thesongpopularity(lst))
     #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
     cur.execute('SELECT track FROM Spotify_Popularity_Scores')
     track_list = cur.fetchall()
     index = len(track_list)
     #Adds songs in Billboard table (25 entries each time)
-    for i in range(20):
+    for i in range(25):
         #song_ID identifies unique songs
         song_ID = index + 1
         track = popularity_lst[index][0]
@@ -128,9 +123,25 @@ def pop_table(cur, conn, lst):
         index += 1
     conn.commit()
 
-def get_top_albums_pitch():
-    #options 
-    pass 
+def date_table(cur, conn, lst):
+    #cur.execute("DROP TABLE IF EXISTS Spotify_Dates")
+    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Dates (song_ID INTEGER PRIMARY KEY, track TEXT, date TEXT)")
+
+    #Calls pop_lst()
+    date_list = theflist(lst, thesongdate(lst))
+    #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
+    cur.execute('SELECT track FROM Spotify_Dates')
+    track_list = cur.fetchall()
+    index = len(track_list)
+    #Adds songs in Billboard table (25 entries each time)
+    for i in range(25):
+        #song_ID identifies unique songs
+        song_ID = index + 1
+        track = date_list[index][0]
+        date = date_list[index][1]
+        cur.execute("INSERT INTO Spotify_Dates(song_ID, track, date) VALUES (?, ?, ?)", (song_ID, track, date))
+        index += 1
+    conn.commit()
 
 
 
@@ -139,18 +150,9 @@ def main():
     conn = sqlite3.connect(path+'/TopCharts.db')
     cur = conn.cursor()
     tuples_lst = format(cur, conn)
-    # for x in tuples_lst:
-    #     test.append(thesonggenre(x))
-    # print(x)
-    #print(tuples_lst)
-    y = thesongpopularity(tuples_lst)
-    print(y) 
-    x = thesongdate(tuples_lst)
-    print(x)
-    #print(pop_list(tuples_lst))
-    # print(refined_tuple_lst)
-    # #pop_list(refined_tuple_lst)
-    
+    pop_table(cur, conn, tuples_lst)
+    date_table(cur, conn, tuples_lst)
+
     conn.close()
 
 
