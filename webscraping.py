@@ -9,8 +9,6 @@ import sqlite3
 import json
 
 
-
-
 #use Beautiful soup and html parser to get info from website and store in database. and run calculations on Billboard data
 
 def createDatabase(name):
@@ -42,7 +40,7 @@ def gather_data_pitch():
         songname.append(res)
     together = zip(artist, songname)
     togetherr = list(together)
-    print(togetherr)
+    #print(togetherr)
     return togetherr
 
 
@@ -60,9 +58,6 @@ def gather_data_BS():
     first_artist = soup.find('span', class_="c-label a-font-primary-s lrv-u-font-size-14@mobile-max u-line-height-normal@mobile-max u-letter-spacing-0021 lrv-u-display-block u-font-size-20@tablet")
     first_artist = first_artist.text.strip()
     ls_of_artists.append(first_artist)
-    # first_input = first_song, first_artist
-    # ls_of_titles.append(first_input)
-        #find all titles
     all_titles = soup.find_all('h3', class_= "c-title a-font-primary-bold-s u-letter-spacing-0021 lrv-u-font-size-18@tablet lrv-u-font-size-16 u-line-height-125 u-line-height-normal@mobile-max")
     all_artists = soup.find_all('span', class_="c-label a-font-primary-s lrv-u-font-size-14@mobile-max u-line-height-normal@mobile-max u-letter-spacing-0021 lrv-u-display-block")
     for i in all_titles:
@@ -74,18 +69,18 @@ def gather_data_BS():
         ls_of_artists.append(artist)
     together = zip(ls_of_titles, ls_of_artists)
     together = list(together)
-    print(together)
+    #print(together)
     return together
 
 
 def set_up_Billboard(cur, conn):
     "Input: Database cursor and connection. No output. Creates Table that will hold Top 100 hummed songs"
-    #cur.execute("DROP TABLE IF EXISTS Billboard")
+    
     cur.execute("CREATE TABLE IF NOT EXISTS Billboard (song_id INTEGER PRIMARY KEY, song_rank INTEGER, title TEXT, artist TEXT)")
     conn.commit()
 def set_up_Pitchfork(cur, conn):
     "Input: Database cursor and connection. No output. Creates Table that will hold Top 100 hummed songs"
-    #cur.execute("DROP TABLE IF EXISTS Pitchfork")
+    
     cur.execute("CREATE TABLE IF NOT EXISTS Pitchfork (song_id INTEGER PRIMARY KEY, song_rank INTEGER, title TEXT, artist TEXT)")
     conn.commit()
 
@@ -93,7 +88,6 @@ def fill_data_in_Billboard(cur,conn):
     "Input: Database cursor and connection. No output. Fills in the Billboard table with songs, artists, and ID. ID is song's unique identification number for reference."
     #Calls get_data()
     data_list = gather_data_BS()
-    
     cur.execute('SELECT title FROM Billboard')
     songs_list = cur.fetchall()
     index = len(songs_list)
@@ -121,12 +115,11 @@ def fill_data_in_Pitchfork(cur,conn):
     conn.commit()
 
 
-
-
 def main():
-    # path = os.path.dirname(os.path.abspath(__file__))
-    # conn = sqlite3.connect(path+'/music.db')
-    # cur = conn.cursor()
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/TopCharts.db')
+    cur = conn.cursor()
+    
 
     cur, conn = createDatabase('TopCharts.db')
     gather_data_BS()
@@ -137,13 +130,8 @@ def main():
     set_up_Pitchfork(cur, conn)
     fill_data_in_Pitchfork(cur, conn)
 
-    # gather_data_BS('top-billboard-200-albums/')
-    # gather_data_BS('top-artists/')
-    # (cur, conn)
 
-
-
-    # conn.close()
+    conn.close()
 
 
 

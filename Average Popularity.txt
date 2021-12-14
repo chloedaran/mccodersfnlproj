@@ -1,0 +1,7 @@
+Comparing the Average Popularity of a BillBoard Hot 100 Songs and Pitchfork Best Songs of 2020 on Spotify
+============================================================
+
+The average popularity of a Billboard Hot 100 song on Spotify is 78.89.
+
+The average popularity of a Pitchfork's 100 Best Songs 61.09.
+

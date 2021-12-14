@@ -1,4 +1,4 @@
-#Final Project 
+#pitch
 from typing import final
 import requests
 import re
@@ -20,13 +20,11 @@ sp = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
 client_credentials_manager = SpotifyClientCredentials(client_id=cid, client_secret=secret)
 sp = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
 
-def billboard_selection(cur, conn):
-    cur.execute('SELECT Billboard.title, Billboard.artist FROM Billboard')
+def pitchfork_selection(cur, conn):
+    cur.execute('SELECT Pitchfork.title, Pitchfork.artist FROM Pitchfork')
     tlist = cur.fetchall()
     conn.commit()
     return tlist
-
-
 
 def strip_titles(lst):
     final_titles = []
@@ -91,14 +89,13 @@ def theseason(dateslist):
             season = 'other'
             season_lst.append(season)
     return season_lst
-
-def seasonkey(cur, conn, lst):
+def seasonkey2(cur, conn, lst):
     #season key table needs to have the song title, date, and season of each track.
-    #cur.execute("DROP TABLE IF EXISTS SeasonKey")
-    cur.execute("CREATE TABLE IF NOT EXISTS SeasonKey (track TEXT, date TEXT, season TEXT)")
+    #cur.execute("DROP TABLE IF EXISTS SeasonKey2")
+    cur.execute("CREATE TABLE IF NOT EXISTS SeasonKey2 (track TEXT, date TEXT, season TEXT)")
     date_list = theflist(final_tuples(lst,strip_titles(lst)), thesongdate(lst), theseason(thesongdate(lst)))
     #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
-    cur.execute('SELECT track FROM SeasonKey')
+    cur.execute('SELECT track FROM SeasonKey2')
     track_list = cur.fetchall()
     index = len(track_list)
     #Adds songs in Billboard table (25 entries each time)
@@ -108,25 +105,22 @@ def seasonkey(cur, conn, lst):
         track = date_list[index][0]
         date = date_list[index][1]
         season = date_list[index][2]
-        cur.execute("INSERT INTO SeasonKey(track, date, season) VALUES (?, ?, ?)", (track, date, season,))
+        cur.execute("INSERT INTO SeasonKey2 (track, date, season) VALUES (?, ?, ?)", (track, date, season,))
         index += 1
     conn.commit()
-
 def theflist(songlist, apidatalist, season_lst):
     songgg = []
     for item in songlist:
         songgg.append(item[0])
     x = list(zip(songgg, apidatalist, season_lst))
     return x
-
-
-def pop_table(cur, conn, lst):
-    #cur.execute("DROP TABLE IF EXISTS Spotify_Popularity_Scores")
-    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
+def pop_table2(cur, conn, lst):
+    #cur.execute("DROP TABLE IF EXISTS Spotify_Popularity_Scores2")
+    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Popularity_Scores2 (song_ID INTEGER PRIMARY KEY, track TEXT, popularity INTEGER)")
     #Calls pop_lst()
-    popularity_lst = theflist(final_tuples(lst,strip_titles(lst)), thesongpopularity(lst), theseason(thesongdate(lst)))
+    popularity_lst = theflist(lst , thesongpopularity(lst), theseason(thesongdate(lst)))
     #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
-    cur.execute('SELECT track FROM Spotify_Popularity_Scores')
+    cur.execute('SELECT track FROM Spotify_Popularity_Scores2')
     track_list = cur.fetchall()
     index = len(track_list)
     #Adds songs in Billboard table (25 entries each time)
@@ -135,49 +129,43 @@ def pop_table(cur, conn, lst):
         song_ID = index + 1
         track = popularity_lst[index][0]
         popularity = popularity_lst[index][1]
-        cur.execute("INSERT INTO Spotify_Popularity_Scores (song_ID, track, popularity) VALUES (?, ?, ?)", (song_ID, track, popularity))
+        cur.execute("INSERT INTO Spotify_Popularity_Scores2 (song_ID, track, popularity) VALUES (?, ?, ?)", (song_ID, track, popularity))
         index += 1
     conn.commit()
-
-
-def date_table(cur, conn, lst):
-    #cur.execute("DROP TABLE IF EXISTS Spotify_Dates")
-    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Dates (song_ID INTEGER PRIMARY KEY, track TEXT, date TEXT, season TEXT)")
+def date_table2(cur, conn, lst):
+    #cur.execute("DROP TABLE IF EXISTS Spotify_Dates2")
+    cur.execute("CREATE TABLE IF NOT EXISTS Spotify_Dates2 (song_ID INTEGER PRIMARY KEY, track TEXT, date TEXT, season TEXT)")
     #Calls pop_lst()
-    date_list = theflist(final_tuples(lst,strip_titles(lst)), thesongdate(lst), theseason(thesongdate(lst)))
-    #Reads Billboard Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
-    cur.execute('SELECT track FROM Spotify_Dates')
+    date_list = theflist(lst, thesongdate(lst), theseason(thesongdate(lst)))
+    #Reads Pitchfork Database and find the last index of data in Spotify_Popularity_Scores. Prevents duplicates when code is run again.
+    cur.execute('SELECT track FROM Spotify_Dates2')
     track_list = cur.fetchall()
     index = len(track_list)
-    #Adds songs in Billboard table (25 entries each time)
+    #Adds songs in Pitchfork table (25 entries each time)
     for i in range(25):
         #song_ID identifies unique songs
         song_ID = index + 1
         track = date_list[index][0]
         date = date_list[index][1]
         season = date_list[index][2]
-        cur.execute("INSERT INTO Spotify_Dates(song_ID, track, date, season) VALUES (?, ?, ?, ?)", (song_ID, track, date, season))
+        cur.execute("INSERT INTO Spotify_Dates2(song_ID, track, date, season) VALUES (?, ?, ?, ?)", (song_ID, track, date, season))
         index += 1
     conn.commit()
-
-
 
 def main():
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/TopCharts.db')
     cur = conn.cursor()
-    btuples_lst = billboard_selection(cur, conn)
-
-    strip_titles(btuples_lst)
-
     
-    b_stripped = strip_titles(btuples_lst)
-    k = final_tuples(btuples_lst, b_stripped)
+    ptuples_lst = pitchfork_selection(cur, conn)
+  
+    p_stripped = strip_titles(ptuples_lst)
+    c = final_tuples(ptuples_lst, p_stripped)
+    
+    pop_table2(cur, conn, c)
+    date_table2(cur, conn, c)
 
-    pop_table(cur, conn, btuples_lst)
-    date_table(cur, conn, btuples_lst)
-    seasonkey(cur, conn, btuples_lst)
-
+    seasonkey2(cur, conn, c)
     conn.close()
 
 
